@@ -1,27 +1,33 @@
 package com.gmail.aamnony.soundgenerator;
 
 import android.app.Activity;
+import android.content.Context;
+import android.media.AudioManager;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeListener
+import java.util.Locale;
+
+public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeListener, Tone.OnPlaybackChangedListener
 {
     private TextView txtFrequency;
     private SeekBar seekFrequency;
-    private TextView txtVolume;
     private SeekBar seekVolume;
     private Spinner spinnerWaveTypes;
+    private CheckBox chkHighFrequencies;
     private ChronometerEx chronometer;
     private Button btnBuzz;
 
     private Tone mTone;
+    private AudioManager mAudioManager;
 
     @Override
     protected void onCreate (Bundle savedInstanceState)
@@ -30,9 +36,20 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         setContentView(R.layout.activity_main);
         initViews();
 
+        mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+
         seekFrequency.setOnSeekBarChangeListener(this);
         seekVolume.setOnSeekBarChangeListener(this);
-
+        seekVolume.setMax(mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC));
+        spinnerWaveTypes.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, Tone.Type.names()));
+        chkHighFrequencies.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener()
+        {
+            @Override
+            public void onCheckedChanged (CompoundButton buttonView, boolean isChecked)
+            {
+                seekFrequency.setMax(isChecked ? 20000 : 3500);
+            }
+        });
         btnBuzz.setOnTouchListener(new View.OnTouchListener()
         {
             @Override
@@ -40,34 +57,22 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
             {
                 switch (event.getAction())
                 {
-                    //case MotionEvent.ACTION_BUTTON_PRESS:
                     case MotionEvent.ACTION_DOWN:
-                        Log.d("buzz", "press");
                         mTone.changeTo(Tone.Type.values[spinnerWaveTypes.getSelectedItemPosition()], seekFrequency.getProgress());
-                        mTone.setVolume(seekVolume.getProgress() / 100.0f);
                         mTone.play();
-                        chronometer.start();
-                        seekFrequency.setEnabled(false);
-                        spinnerWaveTypes.setEnabled(false);
-                        return true;
-                    default:
-                        //case MotionEvent.ACTION_BUTTON_RELEASE:
+                        return false;
                     case MotionEvent.ACTION_UP:
-                        Log.d("buzz", "release");
                         mTone.pause();
-                        chronometer.stop();
-                        seekFrequency.setEnabled(true);
-                        spinnerWaveTypes.setEnabled(true);
+                        return false;
+                    default:
                         return true;
                 }
             }
         });
 
-        spinnerWaveTypes.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, Tone.Type.names()));
-
         seekFrequency.setProgress(1000);
-        seekVolume.setProgress(100);
-        mTone = new Tone(Tone.Type.SINE, seekFrequency.getProgress());
+        seekVolume.setProgress(seekVolume.getMax() / 2);
+        mTone = new Tone(Tone.Type.SINE, seekFrequency.getProgress(), this);
     }
 
     @Override
@@ -75,9 +80,6 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     {
         super.onPause();
         mTone.pause();
-        seekFrequency.setEnabled(true);
-        spinnerWaveTypes.setEnabled(true);
-        chronometer.stop();
     }
 
     @Override
@@ -88,15 +90,24 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     }
 
     @Override
+    public void onPlaybackChanged (boolean isPlaying)
+    {
+        chronometer.setStarted(isPlaying);
+        seekFrequency.setEnabled(!isPlaying);
+        spinnerWaveTypes.setEnabled(!isPlaying);
+        chkHighFrequencies.setEnabled(!isPlaying);
+    }
+
+    @Override
     public void onProgressChanged (SeekBar seekBar, int progress, boolean fromUser)
     {
         switch (seekBar.getId())
         {
             case R.id.seekFrequency:
-                txtFrequency.setText(progress + " Hz");
+                txtFrequency.setText(String.format(Locale.ENGLISH, "%d Hz", progress));
                 break;
             case R.id.seekVolume:
-                txtVolume.setText(progress + "%");
+                mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, progress, 0);
                 break;
         }
     }
@@ -117,9 +128,9 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     {
         txtFrequency = (TextView) findViewById(R.id.txtFrequency);
         seekFrequency = (SeekBar) findViewById(R.id.seekFrequency);
-        txtVolume = (TextView) findViewById(R.id.txtVolume);
         seekVolume = (SeekBar) findViewById(R.id.seekVolume);
         spinnerWaveTypes = (Spinner) findViewById(R.id.spinnerWaveTypes);
+        chkHighFrequencies = (CheckBox) findViewById(R.id.chkHighFrequencies);
         chronometer = (ChronometerEx) findViewById(R.id.chronometer);
         btnBuzz = (Button) findViewById(R.id.btnBuzz);
     }

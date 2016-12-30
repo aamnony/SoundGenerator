@@ -25,7 +25,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
         android:layout_marginTop="10dp"
-        android:max="20000"/>
+        android:max="3500"/>
 
     <TextView
         android:id="@+id/txtVolume"
@@ -33,7 +33,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
         android:layout_marginTop="10dp"
-        android:text="volume"/>
+        android:text="Volume:"/>
 
     <SeekBar
         android:id="@+id/seekVolume"
@@ -43,26 +43,37 @@
         android:layout_marginTop="10dp"
         android:max="100"/>
 
-    <Spinner
-        android:id="@+id/spinnerWaveTypes"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="20dp"/>
+        android:layout_marginTop="20dp"
+        android:orientation="horizontal">
+
+        <Spinner
+            android:id="@+id/spinnerWaveTypes"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <CheckBox
+            android:id="@+id/chkHighFrequencies"
+            android:text="High frequencies"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+    </LinearLayout>
 
     <com.gmail.aamnony.soundgenerator.ChronometerEx
         android:id="@+id/chronometer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:layout_marginTop="60dp"
-        android:layout_marginBottom="10dp"/>
+        android:layout_marginBottom="10dp"
+        android:layout_marginTop="60dp"/>
 
     <Button
         android:id="@+id/btnBuzz"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:text="Buzz!"/>
+        android:text="Buzz"/>
 
 </LinearLayout>
